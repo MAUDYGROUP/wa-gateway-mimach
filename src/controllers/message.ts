@@ -5,6 +5,11 @@ import { z } from "zod";
 import { HTTPException } from "hono/http-exception";
 import { whatsapp } from "../whatsapp";
 
+const randomDelay = (min: number, max: number) => {
+  const ms = Math.floor(Math.random() * (max - min + 1) + min) * 1000;
+  return new Promise((resolve) => setTimeout(resolve, ms));
+};
+
 export const createMessageController = () => {
   const sendMessageSchema = z.object({
     session: z.string(),
@@ -32,6 +37,8 @@ export const createMessageController = () => {
             message: "Session does not exist",
           });
         }
+
+        await randomDelay(7, 20);
 
         await whatsapp.sendTypingIndicator({
           sessionId: payload.session,
@@ -72,6 +79,8 @@ export const createMessageController = () => {
           });
         }
 
+        await randomDelay(7, 20);
+
         const response = await whatsapp.sendText({
           sessionId: payload.session,
           to: payload.to,
@@ -107,6 +116,8 @@ export const createMessageController = () => {
             message: "Session does not exist",
           });
         }
+
+        await randomDelay(7, 20);
 
         await whatsapp.sendTypingIndicator({
           sessionId: payload.session,
@@ -153,6 +164,8 @@ export const createMessageController = () => {
             message: "Session does not exist",
           });
         }
+
+        await randomDelay(7, 20);
 
         await whatsapp.sendTypingIndicator({
           sessionId: payload.session,
@@ -202,6 +215,8 @@ export const createMessageController = () => {
           });
         }
 
+        await randomDelay(7, 20);
+
         await whatsapp.sendTypingIndicator({
           sessionId: payload.session,
           to: payload.to,
@@ -246,6 +261,8 @@ export const createMessageController = () => {
             message: "Session does not exist",
           });
         }
+
+        await randomDelay(7, 20);
 
         const response = await whatsapp.sendSticker({
           sessionId: payload.session,
