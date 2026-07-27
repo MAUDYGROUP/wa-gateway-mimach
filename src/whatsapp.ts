@@ -3,6 +3,8 @@ import { createWebhookSession } from "./webhooks/session";
 import { env } from "./env";
 import { CreateWebhookProps } from "./webhooks";
 import { createWebhookMessage } from "./webhooks/message";
+import { messageStore } from "./message-store";
+import { randomUUID } from "crypto";
 
 export const whatsappStatuses = new Map<
   string,
@@ -66,5 +68,42 @@ export const whatsapp = new Whatsapp({
     webhookSession({ session: sessionId, status: "disconnected" });
   },
 
-  onMessageReceived: webhookMessage,
+  onMessageReceived: async (message) => {
+    // Simpan pesan masuk ke message store
+    if (!message.key.fromMe && !message.key.remoteJid?.includes("broadcast")) {
+      const text =
+        message.message?.conversation ||
+        message.message?.extendedTextMessage?.text ||
+        message.message?.imageMessage?.caption ||
+        message.message?.videoMessage?.caption ||
+        message.message?.documentMessage?.caption ||
+        null;
+
+      const type = message.message?.imageMessage
+        ? "image"
+        : message.message?.videoMessage
+          ? "video"
+          : message.message?.documentMessage
+            ? "document"
+            : message.message?.audioMessage
+              ? "audio"
+              : message.message?.stickerMessage
+                ? "sticker"
+                : "text";
+
+      messageStore.add({
+        id: message.key.id || randomUUID(),
+        direction: "received",
+        status: "success",
+        session: message.sessionId,
+        from: message.key.remoteJid ?? undefined,
+        text,
+        type,
+        timestamp: Date.now(),
+      });
+    }
+
+    // Teruskan ke webhook eksternal seperti semula
+    webhookMessage(message);
+  },
 });

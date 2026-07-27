@@ -3,7 +3,9 @@ import { createDashboardMiddleware } from "../../middlewares/key.middleware";
 import DashboardIndex from "../../views/dashboard";
 import SessionPage from "../../views/dashboard/sessions";
 import MessageSendPage from "../../views/dashboard/message-send";
+import MessageLogPage from "../../views/dashboard/message-log";
 import { whatsapp, whatsappStatuses } from "../../whatsapp";
+import { messageStore } from "../../message-store";
 import { randomUUID } from "crypto";
 import CreateSessionPage from "../../views/dashboard/session-create";
 
@@ -166,8 +168,43 @@ export const createDashboardController = () => {
               500,
             );
           }
+        })
+        .post("/resend", async (c) => {
+          const { messageId } = await c.req.json();
+          if (!messageId) {
+            return c.json({ success: false, error: "messageId is required" }, 400);
+          }
+
+          const msg = messageStore.getById(messageId);
+          if (!msg || !msg.resendPayload) {
+            return c.json({ success: false, error: "Message not found or not resendable" }, 404);
+          }
+
+          try {
+            await whatsapp.sendText({
+              sessionId: msg.resendPayload.session,
+              to: msg.resendPayload.to,
+              text: msg.resendPayload.text,
+            });
+            messageStore.updateStatus(messageId, "success");
+            return c.json({ success: true });
+          } catch (error) {
+            return c.json(
+              { success: false, error: (error as Error).message },
+              500,
+            );
+          }
         }),
-    );
+    )
+
+    /**
+     * log route
+     */
+    .get("/log", (c) => {
+      const messages = messageStore.getAll();
+      return c.render(<MessageLogPage messages={messages} />);
+    });
 
   return app;
 };
+

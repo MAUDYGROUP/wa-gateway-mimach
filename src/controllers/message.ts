@@ -4,6 +4,8 @@ import { requestValidator } from "../middlewares/validation.middleware";
 import { z } from "zod";
 import { HTTPException } from "hono/http-exception";
 import { whatsapp } from "../whatsapp";
+import { messageStore } from "../message-store";
+import { randomUUID } from "crypto";
 
 const randomDelay = (min: number, max: number) => {
   const ms = Math.floor(Math.random() * (max - min + 1) + min) * 1000;
@@ -38,25 +40,43 @@ export const createMessageController = () => {
           });
         }
 
-        await randomDelay(7, 20);
-
-        await whatsapp.sendTypingIndicator({
-          sessionId: payload.session,
-          to: payload.to,
-          duration: Math.min(5000, payload.text.length * 100),
-          isGroup: payload.is_group,
-        });
-
-        const response = await whatsapp.sendText({
-          sessionId: payload.session,
+        const msgId = randomUUID();
+        const resendPayload = { session: payload.session, to: payload.to, text: payload.text };
+        messageStore.add({
+          id: msgId,
+          direction: "sent",
+          status: "pending",
+          session: payload.session,
           to: payload.to,
           text: payload.text,
-          isGroup: payload.is_group,
+          type: "text",
+          timestamp: Date.now(),
+          resendPayload,
         });
 
-        return c.json({
-          data: response,
-        });
+        try {
+          await randomDelay(7, 20);
+
+          await whatsapp.sendTypingIndicator({
+            sessionId: payload.session,
+            to: payload.to,
+            duration: Math.min(5000, payload.text.length * 100),
+            isGroup: payload.is_group,
+          });
+
+          const response = await whatsapp.sendText({
+            sessionId: payload.session,
+            to: payload.to,
+            text: payload.text,
+            isGroup: payload.is_group,
+          });
+
+          messageStore.updateStatus(msgId, "success");
+          return c.json({ data: response });
+        } catch (err) {
+          messageStore.updateStatus(msgId, "failed", (err as Error).message);
+          throw err;
+        }
       }
     )
     /**
@@ -79,17 +99,35 @@ export const createMessageController = () => {
           });
         }
 
-        await randomDelay(7, 20);
-
-        const response = await whatsapp.sendText({
-          sessionId: payload.session,
+        const msgId = randomUUID();
+        const resendPayload = { session: payload.session, to: payload.to, text: payload.text };
+        messageStore.add({
+          id: msgId,
+          direction: "sent",
+          status: "pending",
+          session: payload.session,
           to: payload.to,
           text: payload.text,
+          type: "text",
+          timestamp: Date.now(),
+          resendPayload,
         });
 
-        return c.json({
-          data: response,
-        });
+        try {
+          await randomDelay(7, 20);
+
+          const response = await whatsapp.sendText({
+            sessionId: payload.session,
+            to: payload.to,
+            text: payload.text,
+          });
+
+          messageStore.updateStatus(msgId, "success");
+          return c.json({ data: response });
+        } catch (err) {
+          messageStore.updateStatus(msgId, "failed", (err as Error).message);
+          throw err;
+        }
       }
     )
     /**
