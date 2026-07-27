@@ -42,7 +42,7 @@ export const createMessageController = () => {
 
         const msgId = randomUUID();
         const resendPayload = { session: payload.session, to: payload.to, text: payload.text };
-        messageStore.add({
+        await messageStore.add({
           id: msgId,
           direction: "sent",
           status: "pending",
@@ -71,10 +71,10 @@ export const createMessageController = () => {
             isGroup: payload.is_group,
           });
 
-          messageStore.updateStatus(msgId, "success");
+          await messageStore.updateStatus(msgId, "success");
           return c.json({ data: response });
         } catch (err) {
-          messageStore.updateStatus(msgId, "failed", (err as Error).message);
+          await messageStore.updateStatus(msgId, "failed", (err as Error).message);
           throw err;
         }
       }
@@ -101,7 +101,7 @@ export const createMessageController = () => {
 
         const msgId = randomUUID();
         const resendPayload = { session: payload.session, to: payload.to, text: payload.text };
-        messageStore.add({
+        await messageStore.add({
           id: msgId,
           direction: "sent",
           status: "pending",
@@ -122,10 +122,10 @@ export const createMessageController = () => {
             text: payload.text,
           });
 
-          messageStore.updateStatus(msgId, "success");
+          await messageStore.updateStatus(msgId, "success");
           return c.json({ data: response });
         } catch (err) {
-          messageStore.updateStatus(msgId, "failed", (err as Error).message);
+          await messageStore.updateStatus(msgId, "failed", (err as Error).message);
           throw err;
         }
       }

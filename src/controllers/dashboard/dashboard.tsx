@@ -175,7 +175,7 @@ export const createDashboardController = () => {
             return c.json({ success: false, error: "messageId is required" }, 400);
           }
 
-          const msg = messageStore.getById(messageId);
+          const msg = await messageStore.getById(messageId);
           if (!msg || !msg.resendPayload) {
             return c.json({ success: false, error: "Message not found or not resendable" }, 404);
           }
@@ -186,7 +186,7 @@ export const createDashboardController = () => {
               to: msg.resendPayload.to,
               text: msg.resendPayload.text,
             });
-            messageStore.updateStatus(messageId, "success");
+            await messageStore.updateStatus(messageId, "success");
             return c.json({ success: true });
           } catch (error) {
             return c.json(
@@ -200,8 +200,8 @@ export const createDashboardController = () => {
     /**
      * log route
      */
-    .get("/log", (c) => {
-      const messages = messageStore.getAll();
+    .get("/log", async (c) => {
+      const messages = await messageStore.getAll();
       return c.render(<MessageLogPage messages={messages} />);
     });
 

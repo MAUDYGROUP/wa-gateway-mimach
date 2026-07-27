@@ -3,8 +3,7 @@ import { createWebhookSession } from "./webhooks/session";
 import { env } from "./env";
 import { CreateWebhookProps } from "./webhooks";
 import { createWebhookMessage } from "./webhooks/message";
-import { messageStore } from "./message-store";
-import { randomUUID } from "crypto";
+import { messageStore, randomUUID } from "./message-store";
 
 export const whatsappStatuses = new Map<
   string,
@@ -91,7 +90,7 @@ export const whatsapp = new Whatsapp({
                 ? "sticker"
                 : "text";
 
-      messageStore.add({
+      await messageStore.add({
         id: message.key.id || randomUUID(),
         direction: "received",
         status: "success",
