@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { createDashboardMiddleware } from "../../middlewares/key.middleware";
 import DashboardIndex from "../../views/dashboard";
 import SessionPage from "../../views/dashboard/sessions";
+import MessageSendPage from "../../views/dashboard/message-send";
 import { whatsapp, whatsappStatuses } from "../../whatsapp";
 import { randomUUID } from "crypto";
 import CreateSessionPage from "../../views/dashboard/session-create";
@@ -138,27 +139,34 @@ export const createDashboardController = () => {
      */
     .route(
       "/messages",
-      new Hono().post("/send-text-api", async (c) => {
-        const { session, to, message } = await c.req.json();
+      new Hono()
+        .get("/", async (c) => {
+          const sessions = Array.from(whatsappStatuses.entries())
+            .filter(([, status]) => status.status === "connected")
+            .map(([session]) => session);
+          return c.render(<MessageSendPage sessions={sessions} />);
+        })
+        .post("/send-text-api", async (c) => {
+          const { session, to, message } = await c.req.json();
 
-        if (!session || !to || !message) {
-          return c.json({ success: false, error: "Missing parameters" }, 400);
-        }
+          if (!session || !to || !message) {
+            return c.json({ success: false, error: "Missing parameters" }, 400);
+          }
 
-        try {
-          await whatsapp.sendText({
-            sessionId: session,
-            text: message,
-            to,
-          });
-          return c.json({ success: true });
-        } catch (error) {
-          return c.json(
-            { success: false, error: (error as Error).message },
-            500,
-          );
-        }
-      }),
+          try {
+            await whatsapp.sendText({
+              sessionId: session,
+              text: message,
+              to,
+            });
+            return c.json({ success: true });
+          } catch (error) {
+            return c.json(
+              { success: false, error: (error as Error).message },
+              500,
+            );
+          }
+        }),
     );
 
   return app;
