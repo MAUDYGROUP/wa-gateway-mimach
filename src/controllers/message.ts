@@ -12,6 +12,20 @@ const randomDelay = (min: number, max: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
+/**
+ * Normalisasi nomor telepon ke format internasional (62xxx):
+ *  - "0812..."  → "62812..."
+ *  - "812..."   → "62812..."
+ *  - "62812..." → "62812..." (tidak berubah)
+ */
+const normalizePhone = (phone: string): string => {
+  const digits = phone.replace(/\D/g, ""); // hapus non-digit
+  if (digits.startsWith("62")) return digits;
+  if (digits.startsWith("0")) return "62" + digits.slice(1);
+  if (digits.startsWith("8")) return "62" + digits;
+  return digits; // format lain dibiarkan apa adanya
+};
+
 export const createMessageController = () => {
   const sendMessageSchema = z.object({
     session: z.string(),
@@ -33,6 +47,7 @@ export const createMessageController = () => {
       requestValidator("json", sendMessageSchema),
       async (c) => {
         const payload = c.req.valid("json");
+        const to = normalizePhone(payload.to);
         const isExist = await whatsapp.getSessionById(payload.session);
         if (!isExist) {
           throw new HTTPException(400, {
@@ -41,13 +56,13 @@ export const createMessageController = () => {
         }
 
         const msgId = randomUUID();
-        const resendPayload = { session: payload.session, to: payload.to, text: payload.text };
+        const resendPayload = { session: payload.session, to, text: payload.text };
         await messageStore.add({
           id: msgId,
           direction: "sent",
           status: "pending",
           session: payload.session,
-          to: payload.to,
+          to,
           text: payload.text,
           type: "text",
           timestamp: Date.now(),
@@ -59,14 +74,14 @@ export const createMessageController = () => {
 
           await whatsapp.sendTypingIndicator({
             sessionId: payload.session,
-            to: payload.to,
+            to,
             duration: Math.min(5000, payload.text.length * 100),
             isGroup: payload.is_group,
           });
 
           const response = await whatsapp.sendText({
             sessionId: payload.session,
-            to: payload.to,
+            to,
             text: payload.text,
             isGroup: payload.is_group,
           });
@@ -92,6 +107,7 @@ export const createMessageController = () => {
       requestValidator("query", sendMessageSchema),
       async (c) => {
         const payload = c.req.valid("query");
+        const to = normalizePhone(payload.to);
         const isExist = await whatsapp.getSessionById(payload.session);
         if (!isExist) {
           throw new HTTPException(400, {
@@ -100,13 +116,13 @@ export const createMessageController = () => {
         }
 
         const msgId = randomUUID();
-        const resendPayload = { session: payload.session, to: payload.to, text: payload.text };
+        const resendPayload = { session: payload.session, to, text: payload.text };
         await messageStore.add({
           id: msgId,
           direction: "sent",
           status: "pending",
           session: payload.session,
-          to: payload.to,
+          to,
           text: payload.text,
           type: "text",
           timestamp: Date.now(),
@@ -118,7 +134,7 @@ export const createMessageController = () => {
 
           const response = await whatsapp.sendText({
             sessionId: payload.session,
-            to: payload.to,
+            to,
             text: payload.text,
           });
 
@@ -148,6 +164,7 @@ export const createMessageController = () => {
       ),
       async (c) => {
         const payload = c.req.valid("json");
+        const to = normalizePhone(payload.to);
         const isExist = await whatsapp.getSessionById(payload.session);
         if (!isExist) {
           throw new HTTPException(400, {
@@ -159,22 +176,20 @@ export const createMessageController = () => {
 
         await whatsapp.sendTypingIndicator({
           sessionId: payload.session,
-          to: payload.to,
+          to,
           duration: Math.min(5000, payload.text.length * 100),
           isGroup: payload.is_group,
         });
 
         const response = await whatsapp.sendImage({
           sessionId: payload.session,
-          to: payload.to,
+          to,
           text: payload.text,
           media: payload.image_url,
           isGroup: payload.is_group,
         });
 
-        return c.json({
-          data: response,
-        });
+        return c.json({ data: response });
       }
     )
     /**
@@ -196,6 +211,7 @@ export const createMessageController = () => {
       ),
       async (c) => {
         const payload = c.req.valid("json");
+        const to = normalizePhone(payload.to);
         const isExist = await whatsapp.getSessionById(payload.session);
         if (!isExist) {
           throw new HTTPException(400, {
@@ -207,23 +223,21 @@ export const createMessageController = () => {
 
         await whatsapp.sendTypingIndicator({
           sessionId: payload.session,
-          to: payload.to,
+          to,
           duration: Math.min(5000, payload.text.length * 100),
           isGroup: payload.is_group,
         });
 
         const response = await whatsapp.sendDocument({
           sessionId: payload.session,
-          to: payload.to,
+          to,
           text: payload.text,
           media: payload.document_url,
           filename: payload.document_name,
           isGroup: payload.is_group,
         });
 
-        return c.json({
-          data: response,
-        });
+        return c.json({ data: response });
       }
     )
     /**
@@ -246,6 +260,7 @@ export const createMessageController = () => {
       ),
       async (c) => {
         const payload = c.req.valid("json");
+        const to = normalizePhone(payload.to);
         const isExist = await whatsapp.getSessionById(payload.session);
         if (!isExist) {
           throw new HTTPException(400, {
@@ -257,22 +272,20 @@ export const createMessageController = () => {
 
         await whatsapp.sendTypingIndicator({
           sessionId: payload.session,
-          to: payload.to,
+          to,
           duration: Math.min(5000, (payload.text || "").length * 100),
           isGroup: payload.is_group,
         });
 
         const response = await whatsapp.sendVideo({
           sessionId: payload.session,
-          to: payload.to,
+          to,
           text: payload.text || "",
           media: payload.video_url,
           isGroup: payload.is_group,
         });
 
-        return c.json({
-          data: response,
-        });
+        return c.json({ data: response });
       }
     )
     /**
@@ -293,6 +306,7 @@ export const createMessageController = () => {
       ),
       async (c) => {
         const payload = c.req.valid("json");
+        const to = normalizePhone(payload.to);
         const isExist = await whatsapp.getSessionById(payload.session);
         if (!isExist) {
           throw new HTTPException(400, {
@@ -304,14 +318,12 @@ export const createMessageController = () => {
 
         const response = await whatsapp.sendSticker({
           sessionId: payload.session,
-          to: payload.to,
+          to,
           media: payload.image_url,
           isGroup: payload.is_group,
         });
 
-        return c.json({
-          data: response,
-        });
+        return c.json({ data: response });
       }
     );
 
