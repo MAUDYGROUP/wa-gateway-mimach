@@ -46,6 +46,15 @@ export const whatsapp = new Whatsapp({
     const session = await whatsapp.getSessionById(sessionId);
     const user = session?.sock?.user;
 
+    // Set presence ke "unavailable" agar notifikasi HP tetap masuk
+    if (session?.sock) {
+      try {
+        await session.sock.sendPresenceUpdate("unavailable");
+      } catch (e) {
+        console.error(`[${sessionId}] Failed to set presence:`, e);
+      }
+    }
+
     whatsappStatuses.set(sessionId, {
       status: "connected",
       details: {
