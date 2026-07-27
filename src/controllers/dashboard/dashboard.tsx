@@ -149,26 +149,42 @@ export const createDashboardController = () => {
           return c.render(<MessageSendPage sessions={sessions} />);
         })
         .post("/send-text-api", async (c) => {
-          const { session, to, message } = await c.req.json();
+          const { session, to: rawTo, message } = await c.req.json();
 
-          if (!session || !to || !message) {
+          if (!session || !rawTo || !message) {
             return c.json({ success: false, error: "Missing parameters" }, 400);
           }
 
+          // Normalisasi nomor telepon
+          const digits = (rawTo as string).replace(/\D/g, "");
+          const to = digits.startsWith("62") ? digits
+            : digits.startsWith("0") ? "62" + digits.slice(1)
+            : digits.startsWith("8") ? "62" + digits
+            : digits;
+
+          const msgId = randomUUID();
+          await messageStore.add({
+            id: msgId,
+            direction: "sent",
+            status: "pending",
+            session,
+            to,
+            text: message,
+            type: "text",
+            timestamp: Date.now(),
+            resendPayload: { session, to, text: message },
+          });
+
           try {
-            await whatsapp.sendText({
-              sessionId: session,
-              text: message,
-              to,
-            });
+            await whatsapp.sendText({ sessionId: session, text: message, to });
+            await messageStore.updateStatus(msgId, "success");
             return c.json({ success: true });
           } catch (error) {
-            return c.json(
-              { success: false, error: (error as Error).message },
-              500,
-            );
+            await messageStore.updateStatus(msgId, "failed", (error as Error).message);
+            return c.json({ success: false, error: (error as Error).message }, 500);
           }
         })
+
         .post("/resend", async (c) => {
           const { messageId } = await c.req.json();
           if (!messageId) {
