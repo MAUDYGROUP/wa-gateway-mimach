@@ -33,9 +33,14 @@ export const createWebhookMessage =
     const document = await handleWebhookDocumentMessage(message);
     const audio = await handleWebhookAudioMessage(message);
 
+    let fromJid = message.key.remoteJid ?? null;
+    if (fromJid?.includes("@lid")) {
+      fromJid = message.key.remoteJidAlt || message.key.participantAlt || fromJid;
+    }
+
     const body = {
       session: message.sessionId,
-      from: message.key.remoteJid ?? null,
+      from: fromJid,
       message:
         message.message?.conversation ||
         message.message?.extendedTextMessage?.text ||

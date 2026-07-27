@@ -90,12 +90,17 @@ export const whatsapp = new Whatsapp({
                 ? "sticker"
                 : "text";
 
+      let fromJid = message.key.remoteJid ?? undefined;
+      if (fromJid?.includes("@lid")) {
+        fromJid = message.key.remoteJidAlt || message.key.participantAlt || fromJid;
+      }
+
       await messageStore.add({
         id: message.key.id || randomUUID(),
         direction: "received",
         status: "success",
         session: message.sessionId,
-        from: message.key.remoteJid ?? undefined,
+        from: fromJid,
         text,
         type,
         timestamp: Date.now(),
