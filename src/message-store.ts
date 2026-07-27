@@ -116,18 +116,19 @@ export const messageStore = {
       });
 
       if (idx !== -1) {
-        const msg = JSON.parse(raw[idx]) as StoredMessage;
+        const raw_item = raw[idx];
+        if (raw_item === undefined) return;
+        const msg = JSON.parse(raw_item) as StoredMessage;
         msg.status = status;
         if (errorMessage !== undefined) msg.errorMessage = errorMessage;
-        // Redis tidak mendukung update by index langsung,
-        // gunakan LSET untuk mengupdate elemen di posisi idx
         await redis.lSet(REDIS_KEY, idx, JSON.stringify(msg));
       }
     } else {
       const i = memoryMessages.findIndex((m) => m.id === id);
-      if (i !== -1) {
-        memoryMessages[i].status = status;
-        if (errorMessage !== undefined) memoryMessages[i].errorMessage = errorMessage;
+      const item = memoryMessages[i];
+      if (i !== -1 && item !== undefined) {
+        item.status = status;
+        if (errorMessage !== undefined) item.errorMessage = errorMessage;
       }
     }
   },
