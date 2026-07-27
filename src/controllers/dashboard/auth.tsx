@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import AuthIndex from "../../views/auth";
 import { env } from "../../env";
-import { setSignedCookie } from "hono/cookie";
+import { setSignedCookie, deleteCookie } from "hono/cookie";
 
 let loginAttempts = 0;
 let resetLoginTimeout: NodeJS.Timeout | null = null;
@@ -59,6 +59,10 @@ export const createAuthController = () => {
       }
 
       return c.render(<AuthIndex error={"Invalid key"} />);
+    })
+    .get("/logout", async (c) => {
+      deleteCookie(c, "key");
+      return c.redirect("/auth/login");
     });
   return app;
 };
