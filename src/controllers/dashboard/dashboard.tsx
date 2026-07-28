@@ -66,6 +66,7 @@ export const createDashboardController = () => {
           const isExist = whatsappStatuses.has(uuid);
 
           if (!isExist) {
+            whatsappStatuses.set(uuid, { status: "connecting" });
             await whatsapp.startSession(uuid, {
               onQRUpdated(qr) {
                 qrStore.set(uuid, {
