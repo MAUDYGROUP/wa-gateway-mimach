@@ -7,7 +7,8 @@
     "build": "ncc build src/index.ts -o dist -m",
     "build:css": "tailwindcss -i ./src/globals.css  -o ./assets/style.css --watch",
     "dev:ui": "concurrently \"tsx watch src/index.ts\" \"tailwindcss -i ./src/globals.css -o ./assets/style.css --watch\"",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "postinstall": "patch-package"
   },
   "author": {
     "name": "mimamch",
@@ -30,6 +31,8 @@
     "http-errors": "~1.6.3",
     "moment": "^2.29.4",
     "morgan": "~1.9.1",
+    "patch-package": "^8.0.1",
+    "postinstall-postinstall": "^2.1.0",
     "qrcode": "^1.5.1",
     "wa-multi-session": "^4.3.0",
     "zod": "^3.23.8"

@@ -1,0 +1,22 @@
+diff --git a/node_modules/wa-multi-session/dist/Whatsapp/Whatsapp.js b/node_modules/wa-multi-session/dist/Whatsapp/Whatsapp.js
+index f857a06..03318db 100644
+--- a/node_modules/wa-multi-session/dist/Whatsapp/Whatsapp.js
++++ b/node_modules/wa-multi-session/dist/Whatsapp/Whatsapp.js
+@@ -326,6 +326,8 @@ class Whatsapp {
+                     auth: store.state,
+                     logger: this.P,
+                     markOnlineOnConnect: false,
++                    syncFullHistory: false,
++                    generateHighQualityLinkPreview: false,
+                     browser: baileys_1.Browsers.ubuntu("Chrome"),
+                 });
+                 this.sessions.set(sessionId, {
+@@ -448,6 +450,8 @@ class Whatsapp {
+                     auth: store.state,
+                     logger: this.P,
+                     markOnlineOnConnect: false,
++                    syncFullHistory: false,
++                    generateHighQualityLinkPreview: false,
+                     browser: baileys_1.Browsers.ubuntu("Chrome"),
+                 });
+                 this.sessions.set(sessionId, {
