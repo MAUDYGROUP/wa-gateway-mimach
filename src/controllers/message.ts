@@ -28,7 +28,7 @@ const normalizePhone = (phone: string): string => {
 
 export const createMessageController = () => {
   const sendMessageSchema = z.object({
-    session: z.string(),
+    session: z.string().optional(),
     to: z.string(),
     text: z.string(),
     is_group: z.boolean().optional(),
@@ -47,8 +47,10 @@ export const createMessageController = () => {
       requestValidator("json", sendMessageSchema),
       async (c) => {
         const payload = c.req.valid("json");
+        const session = ((c.get as any)("jwtSessionId") as string) || (payload.session as string);
+        if (!session) throw new HTTPException(400, { message: "Session is required" });
         const to = normalizePhone(payload.to);
-        const isExist = await whatsapp.getSessionById(payload.session);
+        const isExist = await whatsapp.getSessionById(session);
         if (!isExist) {
           throw new HTTPException(400, {
             message: "Session does not exist",
@@ -56,12 +58,12 @@ export const createMessageController = () => {
         }
 
         const msgId = randomUUID();
-        const resendPayload = { session: payload.session, to, text: payload.text };
+        const resendPayload = { session, to, text: payload.text };
         await messageStore.add({
           id: msgId,
           direction: "sent",
           status: "pending",
-          session: payload.session,
+          session,
           to,
           text: payload.text,
           type: "text",
@@ -73,14 +75,14 @@ export const createMessageController = () => {
           await randomDelay(7, 20);
 
           await whatsapp.sendTypingIndicator({
-            sessionId: payload.session,
+            sessionId: session,
             to,
             duration: Math.min(5000, payload.text.length * 100),
             isGroup: payload.is_group,
           });
 
           const response = await whatsapp.sendText({
-            sessionId: payload.session,
+            sessionId: session,
             to,
             text: payload.text,
             isGroup: payload.is_group,
@@ -107,8 +109,10 @@ export const createMessageController = () => {
       requestValidator("query", sendMessageSchema),
       async (c) => {
         const payload = c.req.valid("query");
+        const session = ((c.get as any)("jwtSessionId") as string) || (payload.session as string);
+        if (!session) throw new HTTPException(400, { message: "Session is required" });
         const to = normalizePhone(payload.to);
-        const isExist = await whatsapp.getSessionById(payload.session);
+        const isExist = await whatsapp.getSessionById(session);
         if (!isExist) {
           throw new HTTPException(400, {
             message: "Session does not exist",
@@ -116,12 +120,12 @@ export const createMessageController = () => {
         }
 
         const msgId = randomUUID();
-        const resendPayload = { session: payload.session, to, text: payload.text };
+        const resendPayload = { session, to, text: payload.text };
         await messageStore.add({
           id: msgId,
           direction: "sent",
           status: "pending",
-          session: payload.session,
+          session,
           to,
           text: payload.text,
           type: "text",
@@ -133,7 +137,7 @@ export const createMessageController = () => {
           await randomDelay(7, 20);
 
           const response = await whatsapp.sendText({
-            sessionId: payload.session,
+            sessionId: session,
             to,
             text: payload.text,
           });
@@ -164,8 +168,10 @@ export const createMessageController = () => {
       ),
       async (c) => {
         const payload = c.req.valid("json");
+        const session = ((c.get as any)("jwtSessionId") as string) || (payload.session as string);
+        if (!session) throw new HTTPException(400, { message: "Session is required" });
         const to = normalizePhone(payload.to);
-        const isExist = await whatsapp.getSessionById(payload.session);
+        const isExist = await whatsapp.getSessionById(session);
         if (!isExist) {
           throw new HTTPException(400, {
             message: "Session does not exist",
@@ -175,14 +181,14 @@ export const createMessageController = () => {
         await randomDelay(7, 20);
 
         await whatsapp.sendTypingIndicator({
-          sessionId: payload.session,
+          sessionId: session,
           to,
           duration: Math.min(5000, payload.text.length * 100),
           isGroup: payload.is_group,
         });
 
         const response = await whatsapp.sendImage({
-          sessionId: payload.session,
+          sessionId: session,
           to,
           text: payload.text,
           media: payload.image_url,
@@ -211,8 +217,10 @@ export const createMessageController = () => {
       ),
       async (c) => {
         const payload = c.req.valid("json");
+        const session = ((c.get as any)("jwtSessionId") as string) || (payload.session as string);
+        if (!session) throw new HTTPException(400, { message: "Session is required" });
         const to = normalizePhone(payload.to);
-        const isExist = await whatsapp.getSessionById(payload.session);
+        const isExist = await whatsapp.getSessionById(session);
         if (!isExist) {
           throw new HTTPException(400, {
             message: "Session does not exist",
@@ -222,14 +230,14 @@ export const createMessageController = () => {
         await randomDelay(7, 20);
 
         await whatsapp.sendTypingIndicator({
-          sessionId: payload.session,
+          sessionId: session,
           to,
           duration: Math.min(5000, payload.text.length * 100),
           isGroup: payload.is_group,
         });
 
         const response = await whatsapp.sendDocument({
-          sessionId: payload.session,
+          sessionId: session,
           to,
           text: payload.text,
           media: payload.document_url,
@@ -251,7 +259,7 @@ export const createMessageController = () => {
       requestValidator(
         "json",
         z.object({
-          session: z.string(),
+          session: z.string().optional(),
           to: z.string(),
           text: z.string().optional(),
           video_url: z.string(),
@@ -260,8 +268,10 @@ export const createMessageController = () => {
       ),
       async (c) => {
         const payload = c.req.valid("json");
+        const session = ((c.get as any)("jwtSessionId") as string) || (payload.session as string);
+        if (!session) throw new HTTPException(400, { message: "Session is required" });
         const to = normalizePhone(payload.to);
-        const isExist = await whatsapp.getSessionById(payload.session);
+        const isExist = await whatsapp.getSessionById(session);
         if (!isExist) {
           throw new HTTPException(400, {
             message: "Session does not exist",
@@ -271,14 +281,14 @@ export const createMessageController = () => {
         await randomDelay(7, 20);
 
         await whatsapp.sendTypingIndicator({
-          sessionId: payload.session,
+          sessionId: session,
           to,
           duration: Math.min(5000, (payload.text || "").length * 100),
           isGroup: payload.is_group,
         });
 
         const response = await whatsapp.sendVideo({
-          sessionId: payload.session,
+          sessionId: session,
           to,
           text: payload.text || "",
           media: payload.video_url,
@@ -306,8 +316,10 @@ export const createMessageController = () => {
       ),
       async (c) => {
         const payload = c.req.valid("json");
+        const session = ((c.get as any)("jwtSessionId") as string) || (payload.session as string);
+        if (!session) throw new HTTPException(400, { message: "Session is required" });
         const to = normalizePhone(payload.to);
-        const isExist = await whatsapp.getSessionById(payload.session);
+        const isExist = await whatsapp.getSessionById(session);
         if (!isExist) {
           throw new HTTPException(400, {
             message: "Session does not exist",
@@ -317,7 +329,7 @@ export const createMessageController = () => {
         await randomDelay(7, 20);
 
         const response = await whatsapp.sendSticker({
-          sessionId: payload.session,
+          sessionId: session,
           to,
           media: payload.image_url,
           isGroup: payload.is_group,

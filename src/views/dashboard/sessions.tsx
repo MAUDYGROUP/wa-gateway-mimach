@@ -95,18 +95,71 @@ const SessionPage: FC<{
                 </button>
 
                 {session.details?.phoneNumber && (
-                  <button
-                    data-delete={session.session}
-                    style="padding:8px 12px;border-radius:8px;border:1px solid rgba(239,68,68,0.25);background:rgba(239,68,68,0.08);color:#f87171;cursor:pointer;transition:all 0.2s"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.5 1C5.22386 1 5 1.22386 5 1.5C5 1.77614 5.22386 2 5.5 2H9.5C9.77614 2 10 1.77614 10 1.5C10 1.22386 9.77614 1 9.5 1H5.5ZM3 3.5C3 3.22386 3.22386 3 3.5 3H5H10H11.5C11.7761 3 12 3.22386 12 3.5C12 3.77614 11.7761 4 11.5 4H11V12C11 12.5523 10.5523 13 10 13H5C4.44772 13 4 12.5523 4 12V4H3.5C3.22386 4 3 3.77614 3 3.5ZM5 4H10V12H5V4Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
-                  </button>
+                  <>
+                    <button
+                      onclick={`event.preventDefault(); event.stopPropagation(); generateToken('${session.session}')`}
+                      style="padding:8px 12px;border-radius:8px;border:1px solid rgba(168,85,247,0.25);background:rgba(168,85,247,0.08);color:#a855f7;cursor:pointer;transition:all 0.2s"
+                      title="Generate API Token"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7.5 1C3.91015 1 1 3.91015 1 7.5C1 11.0899 3.91015 14 7.5 14C11.0899 14 14 11.0899 14 7.5C14 3.91015 11.0899 1 7.5 1ZM7 4V7H4V8H7V11H8V8H11V7H8V4H7Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
+                    </button>
+                    <button
+                      data-delete={session.session}
+                      style="padding:8px 12px;border-radius:8px;border:1px solid rgba(239,68,68,0.25);background:rgba(239,68,68,0.08);color:#f87171;cursor:pointer;transition:all 0.2s"
+                      title="Delete Session"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.5 1C5.22386 1 5 1.22386 5 1.5C5 1.77614 5.22386 2 5.5 2H9.5C9.77614 2 10 1.77614 10 1.5C10 1.22386 9.77614 1 9.5 1H5.5ZM3 3.5C3 3.22386 3.22386 3 3.5 3H5H10H11.5C11.7761 3 12 3.22386 12 3.5C12 3.77614 11.7761 4 11.5 4H11V12C11 12.5523 10.5523 13 10 13H5C4.44772 13 4 12.5523 4 12V4H3.5C3.22386 4 3 3.77614 3 3.5ZM5 4H10V12H5V4Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
+                    </button>
+                  </>
                 )}
               </div>
             </div>
           </a>
         ))}
       </div>
+
+      {/* Token Modal */}
+      <div id="tokenModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:9999;align-items:center;justify-content:center">
+        <div style="background:#0a1f13;border:1px solid rgba(34,197,94,0.3);border-radius:12px;padding:24px;width:90%;max-width:500px;position:relative">
+          <button onclick="document.getElementById('tokenModal').style.display='none'" style="position:absolute;top:16px;right:16px;background:none;border:none;color:#94a3b8;cursor:pointer">
+            <svg width="20" height="20" viewBox="0 0 15 15" fill="none"><path d="M11.7816 4.03157C12.0062 3.80702 12.0062 3.44295 11.7816 3.2184C11.5571 2.99385 11.193 2.99385 10.9685 3.2184L7.50005 6.68682L4.03164 3.2184C3.80708 2.99385 3.44301 2.99385 3.21846 3.2184C2.99391 3.44295 2.99391 3.80702 3.21846 4.03157L6.68688 7.49999L3.21846 10.9684C2.99391 11.193 2.99391 11.557 3.21846 11.7816C3.44301 12.0061 3.80708 12.0061 4.03164 11.7816L7.50005 8.31316L10.9685 11.7816C11.193 12.0061 11.5571 12.0061 11.7816 11.7816C12.0062 11.557 12.0062 11.193 11.7816 10.9684L8.31322 7.49999L11.7816 4.03157Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
+          </button>
+          <h2 style="font-size:1.2rem;font-weight:700;color:#f0fdf4;margin-bottom:12px">API Token JWT</h2>
+          <p style="font-size:0.85rem;color:#94a3b8;margin-bottom:16px;line-height:1.5">
+            Gunakan token di bawah ini pada header <code>Authorization: Bearer &lt;token&gt;</code> di aplikasi Anda. 
+            Token ini sudah berisi ID sesi sehingga Anda tidak perlu menyertakan <code>session</code> di payload lagi.
+          </p>
+          <div style="display:flex;gap:8px">
+            <input id="tokenInput" type="text" readonly style="flex:1;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px;color:#4ade80;font-family:monospace;font-size:0.85rem" />
+            <button onclick="copyToken()" style="padding:10px 16px;border-radius:8px;background:#22c55e;color:#fff;border:none;font-weight:600;cursor:pointer">Copy</button>
+          </div>
+        </div>
+      </div>
+
+      <script dangerouslySetInnerHTML={{
+        __html: `
+          async function generateToken(session) {
+            try {
+              const res = await fetch('/dashboard/generate-token-api/' + session, { method: 'POST' });
+              const data = await res.json();
+              if (data.success) {
+                document.getElementById('tokenInput').value = data.token;
+                document.getElementById('tokenModal').style.display = 'flex';
+              } else {
+                Toastify({ text: 'Gagal membuat token: ' + data.message, backgroundColor: '#ef4444' }).showToast();
+              }
+            } catch (err) {
+              Toastify({ text: 'Error jaringan', backgroundColor: '#ef4444' }).showToast();
+            }
+          }
+          function copyToken() {
+            const input = document.getElementById('tokenInput');
+            input.select();
+            document.execCommand('copy');
+            Toastify({ text: 'Token berhasil disalin!', backgroundColor: '#22c55e' }).showToast();
+          }
+        `
+      }} />
     </DashboardLayout>
   );
 };

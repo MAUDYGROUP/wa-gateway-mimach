@@ -11,5 +11,6 @@ export const env = z
       .transform((e) => Number(e)),
     WEBHOOK_BASE_URL: z.string().optional(),
     REDIS_URL: z.string().optional(),
+    JWT_SECRET: z.string().default("mimach-secret"),
   })
   .parse(process.env);

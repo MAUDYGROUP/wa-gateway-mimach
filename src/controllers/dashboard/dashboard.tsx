@@ -8,6 +8,8 @@ import { whatsapp, whatsappStatuses } from "../../whatsapp";
 import { messageStore } from "../../message-store";
 import { randomUUID } from "crypto";
 import CreateSessionPage from "../../views/dashboard/session-create";
+import { sign } from "hono/jwt";
+import { env } from "../../env";
 
 const qrStore = new Map<
   string,
@@ -150,6 +152,21 @@ export const createDashboardController = () => {
               success: false, 
               message: `Failed to delete session: ${error instanceof Error ? error.message : "Unknown error"}` 
             }, 500);
+          }
+        })
+        .post("/generate-token-api/:session", async (c) => {
+          const sessionId = c.req.param("session");
+          if (!sessionId) {
+            return c.json({ success: false, message: "Session ID is required" }, 400);
+          }
+          try {
+            const token = await sign(
+              { sessionId, iat: Math.floor(Date.now() / 1000) },
+              env.JWT_SECRET || env.KEY || "mimach-secret"
+            );
+            return c.json({ success: true, token });
+          } catch (error) {
+            return c.json({ success: false, message: "Failed to generate token" }, 500);
           }
         }),
     )
