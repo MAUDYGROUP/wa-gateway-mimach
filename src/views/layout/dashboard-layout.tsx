@@ -39,6 +39,7 @@ const DashboardLayout: FC<{
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="stylesheet" href="/assets/style.css" />
+        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
         <style>{`
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body { background: #071a0f; color: #e2e8f0; font-family: 'Inter', 'Segoe UI', sans-serif; min-height: 100vh; display: flex; }
@@ -302,6 +303,15 @@ const DashboardLayout: FC<{
               <div class="topbar-badge-dot"></div>
               Online
             </div>
+            
+            <div style="margin-left: 16px;">
+              <select id="notification-sound-select" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 4px 8px; font-size: 0.8rem; cursor: pointer;">
+                <option value="none">Mute</option>
+                <option value="beep">Beep</option>
+                <option value="drop">Water Drop</option>
+                <option value="boing">Boing</option>
+              </select>
+            </div>
           </header>
 
           <main class="page-content">
@@ -320,6 +330,77 @@ const DashboardLayout: FC<{
               document.getElementById('sidebar').classList.remove('open');
               document.getElementById('sidebarOverlay').classList.remove('open');
             }
+          `
+        }} />
+
+        <audio id="audio-beep" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+        <audio id="audio-drop" src="https://actions.google.com/sounds/v1/water/drop_sounds.ogg" preload="auto"></audio>
+        <audio id="audio-boing" src="https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg" preload="auto"></audio>
+
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+        
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            document.addEventListener('DOMContentLoaded', () => {
+              const soundSelect = document.getElementById('notification-sound-select');
+              
+              // Load saved preference
+              const savedSound = localStorage.getItem('wa_gateway_notif_sound') || 'beep';
+              if (soundSelect) {
+                soundSelect.value = savedSound;
+                soundSelect.addEventListener('change', (e) => {
+                  localStorage.setItem('wa_gateway_notif_sound', e.target.value);
+                  // Play a test sound when selected
+                  if (e.target.value !== 'none') {
+                    const audio = document.getElementById('audio-' + e.target.value);
+                    if (audio) {
+                      audio.currentTime = 0;
+                      audio.play().catch(err => console.log('Audio test blocked:', err));
+                    }
+                  }
+                });
+              }
+
+              let lastCount = -1;
+              function pollMessages() {
+                fetch('/dashboard/messages/poll-json')
+                  .then(res => res.json())
+                  .then(data => {
+                    if (data && typeof data.count === 'number') {
+                      if (lastCount !== -1 && data.count > lastCount) {
+                        const newMsgs = data.count - lastCount;
+                        Toastify({
+                          text: "Ada " + newMsgs + " pesan baru diterima!",
+                          duration: 4000,
+                          close: true,
+                          gravity: "top",
+                          position: "right",
+                          style: {
+                            background: "linear-gradient(to right, #00b09b, #96c93d)",
+                          }
+                        }).showToast();
+
+                        const currentSound = localStorage.getItem('wa_gateway_notif_sound') || 'beep';
+                        if (currentSound !== 'none') {
+                          const audio = document.getElementById('audio-' + currentSound);
+                          if (audio) {
+                            audio.currentTime = 0;
+                            // Play audio and ignore un-interacted DOM exceptions
+                            audio.play().catch(e => console.log("Audio play failed, user must interact first", e));
+                          }
+                        }
+                      }
+                      lastCount = data.count;
+                    }
+                  })
+                  .catch(err => console.error('Polling error', err))
+                  .finally(() => {
+                    setTimeout(pollMessages, 3000);
+                  });
+              }
+              // Start polling
+              pollMessages();
+            });
           `
         }} />
       </body>

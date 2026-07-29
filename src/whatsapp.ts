@@ -78,7 +78,7 @@ export const whatsapp = new Whatsapp({
 
   onMessageReceived: async (message) => {
     // Simpan pesan masuk ke message store
-    if (!message.key.fromMe && !message.key.remoteJid?.includes("broadcast")) {
+    if (!message.key.fromMe && !message.key.remoteJid?.includes("broadcast") && !message.key.remoteJid?.endsWith("@g.us")) {
       const text =
         message.message?.conversation ||
         message.message?.extendedTextMessage?.text ||

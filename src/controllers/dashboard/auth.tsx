@@ -61,7 +61,7 @@ export const createAuthController = () => {
       return c.render(<AuthIndex error={"Invalid key"} />);
     })
     .get("/logout", async (c) => {
-      deleteCookie(c, "key");
+      deleteCookie(c, "key", { path: "/" });
       return c.redirect("/auth/login");
     });
   return app;

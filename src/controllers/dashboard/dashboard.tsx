@@ -140,6 +140,11 @@ export const createDashboardController = () => {
     /**
      * message routes
      */
+    .get("/messages/poll-json", async (c) => {
+      const messages = await messageStore.getAll();
+      const count = messages.length;
+      return c.json({ count });
+    })
     .route(
       "/messages",
       new Hono()
