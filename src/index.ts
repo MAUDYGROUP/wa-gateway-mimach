@@ -13,6 +13,8 @@ import { serveStatic } from "@hono/node-server/serve-static";
 import { createHealthController } from "./controllers/health";
 import { createAuthController } from "./controllers/dashboard/auth";
 import { createDashboardController } from "./controllers/dashboard/dashboard";
+import * as fs from "fs/promises";
+import * as path from "path";
 
 const app = new Hono()
   .use(
@@ -78,3 +80,36 @@ serve(
   },
   () => console.log(`Server is running on port ${port}`),
 );
+
+// Auto cleanup old media (older than 2 days)
+const cleanupOldMedia = async () => {
+  try {
+    const mediaDir = path.join(process.cwd(), "media");
+    const files = await fs.readdir(mediaDir);
+    const now = Date.now();
+    const twoDaysMs = 2 * 24 * 60 * 60 * 1000;
+    
+    let deletedCount = 0;
+    for (const file of files) {
+      if (file === ".gitkeep") continue;
+      const filePath = path.join(mediaDir, file);
+      const stats = await fs.stat(filePath);
+      if (now - stats.mtimeMs > twoDaysMs) {
+        await fs.unlink(filePath);
+        deletedCount++;
+      }
+    }
+    if (deletedCount > 0) {
+      console.log(`[Cleanup] Deleted ${deletedCount} old media files.`);
+    }
+  } catch (error) {
+    if ((error as any).code !== "ENOENT") {
+      console.error("[Cleanup] Failed to cleanup media:", error);
+    }
+  }
+};
+
+// Run cleanup every hour
+setInterval(cleanupOldMedia, 60 * 60 * 1000);
+// Also run once on startup
+setTimeout(cleanupOldMedia, 5000);

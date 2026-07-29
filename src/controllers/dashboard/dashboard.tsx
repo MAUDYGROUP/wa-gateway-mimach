@@ -208,6 +208,81 @@ export const createDashboardController = () => {
           }
         })
 
+        .post("/send-media-api", async (c) => {
+          const body = await c.req.parseBody();
+          const session = body.session as string;
+          const rawTo = body.to as string;
+          const message = body.message as string;
+          const media = body.media as File;
+
+          if (!session || !rawTo || !media) {
+            return c.json({ success: false, error: "Missing parameters" }, 400);
+          }
+
+          const digits = rawTo.replace(/\D/g, "");
+          const to = digits.startsWith("62") ? digits
+            : digits.startsWith("0") ? "62" + digits.slice(1)
+            : digits.startsWith("8") ? "62" + digits
+            : digits;
+
+          const msgId = randomUUID();
+          
+          const ext = media.name.split('.').pop() || 'tmp';
+          const filename = `${msgId}.${ext}`;
+          const filePath = `./media/${filename}`;
+          
+          const arrayBuffer = await media.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          
+          const fs = await import('fs/promises');
+          await fs.writeFile(filePath, buffer);
+
+          let mediaObj: any = undefined;
+          let type: "image" | "video" | "document" | "audio" | "text" | "sticker" = "document";
+          
+          if (media.type.startsWith("image/")) {
+            type = "image";
+            mediaObj = { image: filename };
+          } else if (media.type.startsWith("video/")) {
+            type = "video";
+            mediaObj = { video: filename };
+          } else if (media.type.startsWith("audio/")) {
+            type = "audio";
+            mediaObj = { audio: filename };
+          } else {
+            type = "document";
+            mediaObj = { document: filename };
+          }
+
+          await messageStore.add({
+            id: msgId,
+            direction: "sent",
+            status: "pending",
+            session,
+            to,
+            text: message,
+            type,
+            media: mediaObj,
+            timestamp: Date.now(),
+            resendPayload: { session, to, text: message },
+          });
+
+          try {
+            if (type === "image") {
+              await whatsapp.sendImage({ sessionId: session, to, text: message, media: filePath });
+            } else if (type === "video") {
+              await whatsapp.sendVideo({ sessionId: session, to, text: message, media: filePath });
+            } else {
+              await whatsapp.sendDocument({ sessionId: session, to, text: message, media: filePath, filename: media.name });
+            }
+            await messageStore.updateStatus(msgId, "success");
+            return c.json({ success: true });
+          } catch (error) {
+            await messageStore.updateStatus(msgId, "failed", (error as Error).message);
+            return c.json({ success: false, error: (error as Error).message }, 500);
+          }
+        })
+
         .post("/resend", async (c) => {
           const { messageId } = await c.req.json();
           if (!messageId) {

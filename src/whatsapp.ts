@@ -4,6 +4,12 @@ import { env } from "./env";
 import { CreateWebhookProps } from "./webhooks";
 import { createWebhookMessage } from "./webhooks/message";
 import { messageStore, randomUUID } from "./message-store";
+import {
+  handleWebhookAudioMessage,
+  handleWebhookDocumentMessage,
+  handleWebhookImageMessage,
+  handleWebhookVideoMessage,
+} from "./webhooks/media";
 
 export const whatsappStatuses = new Map<
   string,
@@ -104,6 +110,21 @@ export const whatsapp = new Whatsapp({
         fromJid = message.key.remoteJidAlt || message.key.participantAlt || fromJid;
       }
 
+      let mediaObj: any = undefined;
+      if (type === "image") {
+        const file = await handleWebhookImageMessage(message);
+        if (file) mediaObj = { image: file };
+      } else if (type === "video") {
+        const file = await handleWebhookVideoMessage(message);
+        if (file) mediaObj = { video: file };
+      } else if (type === "document") {
+        const file = await handleWebhookDocumentMessage(message);
+        if (file) mediaObj = { document: file };
+      } else if (type === "audio") {
+        const file = await handleWebhookAudioMessage(message);
+        if (file) mediaObj = { audio: file };
+      }
+
       await messageStore.add({
         id: message.key.id || randomUUID(),
         direction: "received",
@@ -112,6 +133,7 @@ export const whatsapp = new Whatsapp({
         from: fromJid,
         text,
         type,
+        media: mediaObj,
         timestamp: Date.now(),
       });
     }

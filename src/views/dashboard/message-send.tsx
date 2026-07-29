@@ -68,6 +68,21 @@ const MessageSendPage: FC<{
               />
             </div>
 
+            {/* Media Upload */}
+            <div>
+              <label for="media" style="display:block;font-size:0.82rem;font-weight:600;color:#94a3b8;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">
+                Lampiran Gambar/Video/Dokumen (Opsional)
+              </label>
+              <input
+                type="file"
+                id="media"
+                name="media"
+                accept="image/*,video/*,application/pdf"
+                style="width:100%;padding:10px 14px;background:#0a1f13;border:1px solid rgba(34,197,94,0.2);border-radius:10px;color:#e2e8f0;font-size:0.9rem;outline:none;transition:border-color 0.2s"
+                onfocus="this.style.borderColor='rgba(34,197,94,0.6)'" onblur="this.style.borderColor='rgba(34,197,94,0.2)'"
+              />
+            </div>
+
             {/* Alert area */}
             <div id="messageAlert" style="display:none;padding:12px 16px;border-radius:10px;font-size:0.85rem"></div>
 
@@ -95,17 +110,34 @@ const MessageSendPage: FC<{
             const session = document.getElementById('session').value;
             const to = document.getElementById('to').value;
             const message = document.getElementById('message').value;
+            const mediaInput = document.getElementById('media');
+            const mediaFile = mediaInput.files[0];
 
             btn.disabled = true;
             btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Mengirim...';
             btn.style.opacity = '0.7';
 
             try {
-              const res = await fetch('/dashboard/messages/send-text-api', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ session, to, message })
-              });
+              let res;
+              if (mediaFile) {
+                const formData = new FormData();
+                formData.append('session', session);
+                formData.append('to', to);
+                formData.append('message', message);
+                formData.append('media', mediaFile);
+                
+                res = await fetch('/dashboard/messages/send-media-api', {
+                  method: 'POST',
+                  body: formData
+                });
+              } else {
+                res = await fetch('/dashboard/messages/send-text-api', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ session, to, message })
+                });
+              }
+              
               const data = await res.json();
               if (res.ok && data.success) {
                 alert.style.display = 'block';
@@ -114,6 +146,7 @@ const MessageSendPage: FC<{
                 alert.style.color = '#4ade80';
                 alert.textContent = '✓ Pesan berhasil dikirim!';
                 document.getElementById('message').value = '';
+                mediaInput.value = '';
               } else {
                 throw new Error(data.error || 'Gagal mengirim pesan');
               }

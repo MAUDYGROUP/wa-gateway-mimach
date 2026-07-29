@@ -241,26 +241,34 @@ const MessageLogPage: FC<{
                 {msg.media && (
                   <div>
                     <p style="font-size:0.68rem;color:#475569;text-transform:uppercase;letter-spacing:0.08em;font-weight:700;margin-bottom:8px">Media</p>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <div style="display:flex;flex-direction:column;gap:8px">
                       {msg.media.image && (
-                        <a href={`/media/${msg.media.image}`} target="_blank" style="display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:7px;border:1px solid rgba(96,165,250,0.25);background:rgba(96,165,250,0.08);color:#60a5fa;font-size:0.78rem;font-weight:600;text-decoration:none">
-                          🖼 Lihat Gambar
-                        </a>
+                        <div>
+                          <a href={`/media/${msg.media.image}`} target="_blank">
+                            <img src={`/media/${msg.media.image}`} style="max-width:100%;max-height:300px;border-radius:8px;border:1px solid rgba(96,165,250,0.3)" alt="Attached Image" />
+                          </a>
+                        </div>
                       )}
                       {msg.media.video && (
-                        <a href={`/media/${msg.media.video}`} target="_blank" style="display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:7px;border:1px solid rgba(167,139,250,0.25);background:rgba(167,139,250,0.08);color:#a78bfa;font-size:0.78rem;font-weight:600;text-decoration:none">
-                          🎥 Lihat Video
-                        </a>
+                        <div>
+                          <video controls style="max-width:100%;max-height:300px;border-radius:8px;border:1px solid rgba(167,139,250,0.3)">
+                            <source src={`/media/${msg.media.video}`} type="video/mp4" />
+                          </video>
+                        </div>
                       )}
                       {msg.media.document && (
-                        <a href={`/media/${msg.media.document}`} target="_blank" style="display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:7px;border:1px solid rgba(251,191,36,0.25);background:rgba(251,191,36,0.08);color:#fbbf24;font-size:0.78rem;font-weight:600;text-decoration:none">
-                          📄 Lihat Dokumen
-                        </a>
+                        <div>
+                          <a href={`/media/${msg.media.document}`} target="_blank" style="display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:7px;border:1px solid rgba(251,191,36,0.25);background:rgba(251,191,36,0.08);color:#fbbf24;font-size:0.8rem;font-weight:600;text-decoration:none">
+                            📄 Unduh Dokumen
+                          </a>
+                        </div>
                       )}
                       {msg.media.audio && (
-                        <a href={`/media/${msg.media.audio}`} target="_blank" style="display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:7px;border:1px solid rgba(34,197,94,0.25);background:rgba(34,197,94,0.08);color:#22c55e;font-size:0.78rem;font-weight:600;text-decoration:none">
-                          🎵 Dengar Audio
-                        </a>
+                        <div>
+                          <audio controls style="width:100%;max-width:400px;border-radius:8px">
+                            <source src={`/media/${msg.media.audio}`} type="audio/mpeg" />
+                          </audio>
+                        </div>
                       )}
                     </div>
                   </div>
