@@ -134,6 +134,23 @@ export const createDashboardController = () => {
           }
 
           return c.render(<CreateSessionPage id={uuid} />);
+        })
+        .delete("/delete-api/:session", async (c) => {
+          const sessionId = c.req.param("session");
+          if (!sessionId) {
+            return c.json({ success: false, message: "Session ID is required" }, 400);
+          }
+          
+          try {
+            await whatsapp.deleteSession(sessionId);
+            whatsappStatuses.delete(sessionId);
+            return c.json({ success: true, message: "Session deleted successfully" });
+          } catch (error) {
+            return c.json({ 
+              success: false, 
+              message: `Failed to delete session: ${error instanceof Error ? error.message : "Unknown error"}` 
+            }, 500);
+          }
         }),
     )
 

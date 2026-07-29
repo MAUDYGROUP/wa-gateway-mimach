@@ -66,7 +66,7 @@ document.querySelectorAll("[data-delete]").forEach((button) => {
       return;
     }
     try {
-      const res = await fetch(`/session/${session}`, {
+      const res = await fetch(`/dashboard/sessions/delete-api/${session}`, {
         method: "DELETE",
       });
 
