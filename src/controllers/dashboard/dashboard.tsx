@@ -8,6 +8,7 @@ import { whatsapp, whatsappStatuses } from "../../whatsapp";
 import { messageStore } from "../../message-store";
 import { randomUUID } from "crypto";
 import CreateSessionPage from "../../views/dashboard/session-create";
+import ApiDocsPage from "../../views/dashboard/api-docs";
 import { sign } from "hono/jwt";
 import { env } from "../../env";
 
@@ -25,6 +26,8 @@ export const createDashboardController = () => {
     .use(createDashboardMiddleware()) // protect all dashboard routes
 
     .get("/", (c) => c.redirect("/dashboard")) // redirect to /dashboard
+    .get("/dashboard", (c) => c.render(<DashboardIndex />))
+    .get("/dashboard/api-docs", (c) => c.render(<ApiDocsPage />))
 
     /**
      * dashboard routes
