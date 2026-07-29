@@ -280,6 +280,15 @@ const DashboardLayout: FC<{
           </nav>
 
           <div class="sidebar-footer">
+            <div style="margin-bottom: 12px; padding: 0 4px;">
+              <label for="notification-sound-select" style="display:block;font-size:0.7rem;color:#64748b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;font-weight:700">Suara Notifikasi</label>
+              <select id="notification-sound-select" style="width:100%; background: rgba(0,0,0,0.2); color: #94a3b8; border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 6px 8px; font-size: 0.8rem; cursor: pointer; outline: none;">
+                <option value="none">Mute</option>
+                <option value="beep">Beep</option>
+                <option value="drop">Water Drop</option>
+                <option value="boing">Boing</option>
+              </select>
+            </div>
             <a href="/auth/logout" class="sidebar-logout">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
               Logout
@@ -302,15 +311,6 @@ const DashboardLayout: FC<{
             <div class="topbar-badge">
               <div class="topbar-badge-dot"></div>
               Online
-            </div>
-            
-            <div style="margin-left: 16px;">
-              <select id="notification-sound-select" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 4px 8px; font-size: 0.8rem; cursor: pointer;">
-                <option value="none">Mute</option>
-                <option value="beep">Beep</option>
-                <option value="drop">Water Drop</option>
-                <option value="boing">Boing</option>
-              </select>
             </div>
           </header>
 
