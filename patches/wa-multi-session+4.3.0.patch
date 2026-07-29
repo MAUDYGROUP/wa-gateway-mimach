@@ -1,8 +1,48 @@
 diff --git a/node_modules/wa-multi-session/dist/Whatsapp/Whatsapp.js b/node_modules/wa-multi-session/dist/Whatsapp/Whatsapp.js
-index f857a06..cd9778f 100644
+index f857a06..efa39cf 100644
 --- a/node_modules/wa-multi-session/dist/Whatsapp/Whatsapp.js
 +++ b/node_modules/wa-multi-session/dist/Whatsapp/Whatsapp.js
-@@ -326,7 +326,9 @@ class Whatsapp {
+@@ -322,11 +322,13 @@ class Whatsapp {
+             const startSocket = () => __awaiter(this, void 0, void 0, function* () {
+                 const store = yield this.getStore(sessionId);
+                 const sock = (0, baileys_1.default)({
+-                    version,
++                    version: [2, 3000, 1015901307],
+                     auth: store.state,
+                     logger: this.P,
+                     markOnlineOnConnect: false,
+-                    browser: baileys_1.Browsers.ubuntu("Chrome"),
++                    syncFullHistory: false,
++                    generateHighQualityLinkPreview: false,
++                    browser: ['Mac OS', 'Chrome', '121.0.6167.159'],
+                 });
+                 this.sessions.set(sessionId, {
+                     sock: sock,
+@@ -360,7 +362,9 @@ class Whatsapp {
+                                     this.sessions.get(sessionId).status = "connecting";
+                             }
+                             if (connection === "close") {
+-                                const code = (_f = (_e = lastDisconnect === null || lastDisconnect === void 0 ? void 0 : lastDisconnect.error) === null || _e === void 0 ? void 0 : _e.output) === null || _f === void 0 ? void 0 : _f.statusCode;
++                                const errorObj = (_e = lastDisconnect === null || lastDisconnect === void 0 ? void 0 : lastDisconnect.error) === null || _e === void 0 ? void 0 : _e.output;
++                                const code = (_f = errorObj) === null || _f === void 0 ? void 0 : _f.statusCode;
++                                console.log("[baileys-debug] connection close. Code:", code, "Payload:", errorObj?.payload);
+                                 let retryAttempt = (_g = this.retryCount.get(sessionId)) !== null && _g !== void 0 ? _g : 0;
+                                 let shouldRetry = false;
+                                 if (code != baileys_1.DisconnectReason.loggedOut && retryAttempt < 10) {
+@@ -368,6 +372,7 @@ class Whatsapp {
+                                 }
+                                 if (shouldRetry) {
+                                     retryAttempt++;
++                                    console.log("[baileys-debug] Retrying connection...", retryAttempt);
+                                     this.retryCount.set(sessionId, retryAttempt);
+                                     startSocket();
+                                 }
+@@ -444,11 +449,13 @@ class Whatsapp {
+                 let isPairingCodeRequested = false;
+                 const store = yield this.getStore(sessionId);
+                 const sock = (0, baileys_1.default)({
+-                    version,
++                    version: [2, 3000, 1015901307],
                      auth: store.state,
                      logger: this.P,
                      markOnlineOnConnect: false,
@@ -13,14 +53,14 @@ index f857a06..cd9778f 100644
                  });
                  this.sessions.set(sessionId, {
                      sock: sock,
-@@ -448,7 +450,9 @@ class Whatsapp {
-                     auth: store.state,
-                     logger: this.P,
-                     markOnlineOnConnect: false,
--                    browser: baileys_1.Browsers.ubuntu("Chrome"),
-+                    syncFullHistory: false,
-+                    generateHighQualityLinkPreview: false,
-+                    browser: baileys_1.Browsers.macOS("Desktop"),
-                 });
-                 this.sessions.set(sessionId, {
-                     sock: sock,
+@@ -492,7 +499,9 @@ class Whatsapp {
+                                     this.sessions.get(sessionId).status = "connecting";
+                             }
+                             if (connection === "close") {
+-                                const code = (_g = (_f = lastDisconnect === null || lastDisconnect === void 0 ? void 0 : lastDisconnect.error) === null || _f === void 0 ? void 0 : _f.output) === null || _g === void 0 ? void 0 : _g.statusCode;
++                                const errorObj = (_f = lastDisconnect === null || lastDisconnect === void 0 ? void 0 : lastDisconnect.error) === null || _f === void 0 ? void 0 : _f.output;
++                                const code = (_g = errorObj) === null || _g === void 0 ? void 0 : _g.statusCode;
++                                console.log("[baileys-debug] connection close. Code:", code, "Payload:", errorObj?.payload);
+                                 let retryAttempt = (_h = this.retryCount.get(sessionId)) !== null && _h !== void 0 ? _h : 0;
+                                 let shouldRetry = false;
+                                 if (code != baileys_1.DisconnectReason.loggedOut && retryAttempt < 10) {
