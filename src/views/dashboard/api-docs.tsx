@@ -48,13 +48,13 @@ const ApiDocsPage: FC = () => {
         <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:12px;padding:24px;margin-bottom:24px;">
           <h2 style="font-size:1.2rem;font-weight:600;color:#f8fafc;margin-bottom:12px;">3. Contoh Request Pengiriman Pesan Teks</h2>
           <p style="color:#94a3b8;margin-bottom:16px;line-height:1.6;font-size:0.95rem;">
-            Kirim permintaan <code>POST</code> ke endpoint <code>/api/message/send-text</code> menggunakan payload sederhana.
+            Kirim permintaan <code>POST</code> ke endpoint <code>/message/send-text</code> menggunakan payload sederhana.
           </p>
 
           <h3 style="font-size:0.95rem;color:#e2e8f0;margin-bottom:8px;">Format Request (JSON):</h3>
           <div style="background:#000;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:16px;margin-bottom:16px;overflow-x:auto;">
             <pre style="color:#e2e8f0;font-family:monospace;font-size:0.85rem;line-height:1.5;">
-{`POST /api/message/send-text
+{`POST /message/send-text
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5c... (Token Anda)
 
@@ -68,7 +68,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5c... (Token Anda)
           <h3 style="font-size:0.95rem;color:#e2e8f0;margin-bottom:8px;">Contoh cURL:</h3>
           <div style="background:#000;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:16px;overflow-x:auto;">
             <pre style="color:#e2e8f0;font-family:monospace;font-size:0.85rem;line-height:1.5;">
-{`curl -X POST https://wa.domainanda.com/api/message/send-text \\
+{`curl -X POST https://wa.domainanda.com/message/send-text \\
   -H "Authorization: Bearer <TOKEN_ANDA>" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -95,15 +95,15 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5c... (Token Anda)
             </thead>
             <tbody>
               <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
-                <td style="padding:12px 8px;font-family:monospace;color:#4ade80;">/api/message/send-image</td>
+                <td style="padding:12px 8px;font-family:monospace;color:#4ade80;">/message/send-image</td>
                 <td style="padding:12px 8px;"><code>to</code>, <code>text</code> (opsional), <code>image_url</code></td>
               </tr>
               <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
-                <td style="padding:12px 8px;font-family:monospace;color:#4ade80;">/api/message/send-document</td>
+                <td style="padding:12px 8px;font-family:monospace;color:#4ade80;">/message/send-document</td>
                 <td style="padding:12px 8px;"><code>to</code>, <code>text</code> (nama file), <code>document_url</code></td>
               </tr>
               <tr>
-                <td style="padding:12px 8px;font-family:monospace;color:#4ade80;">/api/message/send-video</td>
+                <td style="padding:12px 8px;font-family:monospace;color:#4ade80;">/message/send-video</td>
                 <td style="padding:12px 8px;"><code>to</code>, <code>text</code> (opsional), <code>video_url</code></td>
               </tr>
             </tbody>
