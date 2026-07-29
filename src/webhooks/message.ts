@@ -23,7 +23,7 @@ type WebhookMessageBody = {
 export const createWebhookMessage =
   (props: CreateWebhookProps) => async (message: MessageReceived) => {
     if (!props.baseUrl) return;
-    if (message.key.fromMe || message.key.remoteJid?.includes("broadcast") || message.key.remoteJid?.endsWith("@g.us"))
+    if (message.key.fromMe || message.key.remoteJid?.includes("broadcast") || message.key.remoteJid?.endsWith("@g.us") || message.key.remoteJid?.endsWith("@newsletter"))
       return;
 
     const endpoint = `${props.baseUrl}/message`;
