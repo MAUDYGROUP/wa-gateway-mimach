@@ -140,7 +140,7 @@ const SessionPage: FC<{
         __html: `
           async function generateToken(session) {
             try {
-              const res = await fetch('/dashboard/generate-token-api/' + session, { method: 'POST' });
+              const res = await fetch('/dashboard/sessions/generate-token-api/' + session, { method: 'POST' });
               const data = await res.json();
               if (data.success) {
                 document.getElementById('tokenInput').value = data.token;
