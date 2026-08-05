@@ -9,6 +9,8 @@ import { messageStore } from "../../message-store";
 import { randomUUID } from "crypto";
 import CreateSessionPage from "../../views/dashboard/session-create";
 import ApiDocsPage from "../../views/dashboard/api-docs";
+import SystemLogPage from "../../views/dashboard/system-log";
+import { systemLogStore } from "../../log-store";
 import { sign } from "hono/jwt";
 import { env } from "../../env";
 
@@ -128,7 +130,8 @@ export const createDashboardController = () => {
 
                 qrStoreTimeouts.set(uuid, timeout);
               },
-              onDisconnected() {
+              onDisconnected(code, error, shouldRetry) {
+                if (shouldRetry) return;
                 qrStore.delete(uuid);
                 if (qrStoreTimeouts.has(uuid)) {
                   clearTimeout(qrStoreTimeouts.get(uuid)!);
@@ -149,6 +152,12 @@ export const createDashboardController = () => {
           try {
             await whatsapp.deleteSession(sessionId);
             whatsappStatuses.delete(sessionId);
+            systemLogStore.add({
+              level: "INFO",
+              event: "DELETE_SESSION",
+              session: sessionId,
+              message: `Sesi WhatsApp ${sessionId} telah dihapus/logout melalui Dashboard.`,
+            });
             return c.json({ success: true, message: "Session deleted successfully" });
           } catch (error) {
             return c.json({ 
@@ -167,6 +176,12 @@ export const createDashboardController = () => {
               { sessionId, iat: Math.floor(Date.now() / 1000) },
               env.JWT_SECRET || env.KEY || "mimach-secret"
             );
+            systemLogStore.add({
+              level: "INFO",
+              event: "TOKEN_GENERATED",
+              session: sessionId,
+              message: `Token API baru berhasil digenerate untuk sesi ${sessionId}.`,
+            });
             return c.json({ success: true, token });
           } catch (error) {
             return c.json({ success: false, message: "Failed to generate token" }, 500);
@@ -337,6 +352,10 @@ export const createDashboardController = () => {
     .get("/log", async (c) => {
       const messages = await messageStore.getAll();
       return c.render(<MessageLogPage messages={messages} />);
+    })
+    .get("/system-logs", async (c) => {
+      const logs = await systemLogStore.getAll();
+      return c.render(<SystemLogPage logs={logs} />);
     });
 
   return app;

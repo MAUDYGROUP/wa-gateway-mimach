@@ -4,6 +4,7 @@ import { env } from "./env";
 import { CreateWebhookProps } from "./webhooks";
 import { createWebhookMessage } from "./webhooks/message";
 import { messageStore, randomUUID } from "./message-store";
+import { systemLogStore } from "./log-store";
 import {
   handleWebhookAudioMessage,
   handleWebhookDocumentMessage,
@@ -47,6 +48,12 @@ export const whatsapp = new Whatsapp({
 
     console.log(`[${sessionId}] connecting`);
     webhookSession({ session: sessionId, status: "connecting" });
+    systemLogStore.add({
+      level: "INFO",
+      event: "CONNECTING",
+      session: sessionId,
+      message: "Mencoba terhubung ke server WhatsApp...",
+    });
   },
   async onConnected(sessionId) {
     const session = await whatsapp.getSessionById(sessionId);
@@ -71,15 +78,41 @@ export const whatsapp = new Whatsapp({
 
     console.log(`[${sessionId}] connected`);
     webhookSession({ session: sessionId, status: "connected" });
-  },
-  onDisconnected(sessionId) {
-    whatsappStatuses.set(sessionId, {
-      details: whatsappStatuses.get(sessionId)?.details,
-      status: "disconnected",
+    const accountInfo = user?.name ? `${user.name} (${user?.id?.split(":")[0]})` : user?.id?.split(":")[0] || "Unknown";
+    systemLogStore.add({
+      level: "INFO",
+      event: "CONNECTED",
+      session: sessionId,
+      message: `Berhasil terhubung ke WhatsApp (Akun: ${accountInfo})`,
     });
+  },
+  onDisconnected(sessionId, code, errorObj, shouldRetry, retryAttempt) {
+    const reason = systemLogStore.formatDisconnectReason(code, errorObj);
 
-    console.log(`[${sessionId}] disconnected`);
-    webhookSession({ session: sessionId, status: "disconnected" });
+    if (shouldRetry) {
+      systemLogStore.add({
+        level: "WARN",
+        event: "RECONNECTING",
+        session: sessionId,
+        message: `Koneksi terputus sementara (Percobaan koneksi ulang ke-${retryAttempt || 1}). ${reason.description}`,
+        details: { code, shouldRetry, retryAttempt, error: errorObj },
+      });
+    } else {
+      whatsappStatuses.set(sessionId, {
+        details: whatsappStatuses.get(sessionId)?.details,
+        status: "disconnected",
+      });
+
+      console.log(`[${sessionId}] disconnected`);
+      webhookSession({ session: sessionId, status: "disconnected" });
+      systemLogStore.add({
+        level: "ERROR",
+        event: "DISCONNECTED",
+        session: sessionId,
+        message: `Sesi WhatsApp terputus/nonaktif. ${reason.description}`,
+        details: { code, shouldRelogin: reason.shouldRelogin, error: errorObj },
+      });
+    }
   },
 
   onMessageReceived: async (message) => {

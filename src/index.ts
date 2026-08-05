@@ -15,6 +15,7 @@ import { createAuthController } from "./controllers/dashboard/auth";
 import { createDashboardController } from "./controllers/dashboard/dashboard";
 import * as fs from "fs/promises";
 import * as path from "path";
+import { systemLogStore } from "./log-store";
 
 const app = new Hono()
   .use(
@@ -78,11 +79,18 @@ serve(
     fetch: app.fetch,
     port: port,
   },
-  () => console.log(`Server is running on port ${port}`),
+  () => {
+    console.log(`Server is running on port ${port}`);
+    systemLogStore.add({
+      level: "INFO",
+      event: "SERVER_START",
+      message: `Server WA Gateway berhasil dijalankan di port ${port}.`,
+    });
+  },
 );
 
-// Auto cleanup old media (older than 2 days)
-const cleanupOldMedia = async () => {
+// Auto cleanup old media (older than 2 days) and old logs (older than 7 days)
+const cleanupOldData = async () => {
   try {
     const mediaDir = path.join(process.cwd(), "media");
     const files = await fs.readdir(mediaDir);
@@ -107,9 +115,16 @@ const cleanupOldMedia = async () => {
       console.error("[Cleanup] Failed to cleanup media:", error);
     }
   }
+
+  // Cleanup old system logs (> 7 days)
+  try {
+    await systemLogStore.cleanupOldLogs();
+  } catch (error) {
+    console.error("[Cleanup] Failed to cleanup system logs:", error);
+  }
 };
 
 // Run cleanup every hour
-setInterval(cleanupOldMedia, 60 * 60 * 1000);
+setInterval(cleanupOldData, 60 * 60 * 1000);
 // Also run once on startup
-setTimeout(cleanupOldMedia, 5000);
+setTimeout(cleanupOldData, 5000);
