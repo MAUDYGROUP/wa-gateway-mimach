@@ -3,6 +3,7 @@ FROM node:20-alpine AS build
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
+COPY patches ./patches
 RUN npm install
 COPY . .
 RUN npm run build
@@ -13,6 +14,7 @@ WORKDIR /app
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/assets ./assets
 COPY --from=build /app/media ./media
+COPY --from=build /app/logs ./logs
 
 ENV NODE_ENV=production
 EXPOSE 5001
