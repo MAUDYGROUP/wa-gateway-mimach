@@ -1,43 +1,8 @@
-diff --git a/node_modules/wa-multi-session/dist/Types/Whatsapp.d.ts b/node_modules/wa-multi-session/dist/Types/Whatsapp.d.ts
-index 05767f3..c1885d5 100644
---- a/node_modules/wa-multi-session/dist/Types/Whatsapp.d.ts
-+++ b/node_modules/wa-multi-session/dist/Types/Whatsapp.d.ts
-@@ -10,7 +10,7 @@ export type WhatsappConstructorProps = {
-      */
-     onConnecting?: (sessionId: string) => any;
-     onConnected?: (sessionId: string) => any;
--    onDisconnected?: (sessionId: string) => any;
-+    onDisconnected?: (sessionId: string, code?: number, error?: any, shouldRetry?: boolean, retryAttempt?: number) => any;
-     onPairingCode?: (sessionId: string, code: string) => void;
-     onMessageUpdated?: (data: MessageUpdated) => any;
-     onMessageReceived?: (msg: MessageReceived) => any;
-diff --git a/node_modules/wa-multi-session/dist/Types/index.d.ts b/node_modules/wa-multi-session/dist/Types/index.d.ts
-index 9f95c3f..98d652e 100644
---- a/node_modules/wa-multi-session/dist/Types/index.d.ts
-+++ b/node_modules/wa-multi-session/dist/Types/index.d.ts
-@@ -58,7 +58,7 @@ export interface StartSessionParams {
-     onQRUpdated?: (qr: string) => void;
-     onConnected?: () => void;
-     onConnecting?: () => void;
--    onDisconnected?: () => void;
-+    onDisconnected?: (code?: number, error?: any, shouldRetry?: boolean, retryAttempt?: number) => void;
-     onMessageReceived?: (message: MessageReceived) => void;
-     onMessageUpdated?: (message: MessageUpdated) => void;
-     store?: LegacyStore;
-@@ -71,7 +71,7 @@ export interface StartSessionWithPairingCodeParams {
-     onQRUpdated?: (qr: string) => void;
-     onConnected?: () => void;
-     onConnecting?: () => void;
--    onDisconnected?: () => void;
-+    onDisconnected?: (code?: number, error?: any, shouldRetry?: boolean, retryAttempt?: number) => void;
-     onPairingCode?: (code: string) => void;
-     onMessageReceived?: (message: MessageReceived) => void;
-     onMessageUpdated?: (message: MessageUpdated) => void;
 diff --git a/node_modules/wa-multi-session/dist/Whatsapp/Whatsapp.js b/node_modules/wa-multi-session/dist/Whatsapp/Whatsapp.js
-index f857a06..c8c3b16 100644
+index f857a06..efa39cf 100644
 --- a/node_modules/wa-multi-session/dist/Whatsapp/Whatsapp.js
 +++ b/node_modules/wa-multi-session/dist/Whatsapp/Whatsapp.js
-@@ -322,7 +322,7 @@ class Whatsapp {
+@@ -322,11 +322,13 @@ class Whatsapp {
              const startSocket = () => __awaiter(this, void 0, void 0, function* () {
                  const store = yield this.getStore(sessionId);
                  const sock = (0, baileys_1.default)({
@@ -46,7 +11,14 @@ index f857a06..c8c3b16 100644
                      auth: store.state,
                      logger: this.P,
                      markOnlineOnConnect: false,
-@@ -360,7 +360,9 @@ class Whatsapp {
+-                    browser: baileys_1.Browsers.ubuntu("Chrome"),
++                    syncFullHistory: false,
++                    generateHighQualityLinkPreview: false,
++                    browser: ['Mac OS', 'Chrome', '121.0.6167.159'],
+                 });
+                 this.sessions.set(sessionId, {
+                     sock: sock,
+@@ -360,7 +362,9 @@ class Whatsapp {
                                      this.sessions.get(sessionId).status = "connecting";
                              }
                              if (connection === "close") {
@@ -57,29 +29,15 @@ index f857a06..c8c3b16 100644
                                  let retryAttempt = (_g = this.retryCount.get(sessionId)) !== null && _g !== void 0 ? _g : 0;
                                  let shouldRetry = false;
                                  if (code != baileys_1.DisconnectReason.loggedOut && retryAttempt < 10) {
-@@ -368,7 +370,10 @@ class Whatsapp {
+@@ -368,6 +372,7 @@ class Whatsapp {
                                  }
                                  if (shouldRetry) {
                                      retryAttempt++;
 +                                    console.log("[baileys-debug] Retrying connection...", retryAttempt);
                                      this.retryCount.set(sessionId, retryAttempt);
-+                                    (_h = this.callback.get(Defaults_1.CALLBACK_KEY.ON_DISCONNECTED)) === null || _h === void 0 ? void 0 : _h(sessionId, code, errorObj, true, retryAttempt);
-+                                    (_j = options.onDisconnected) === null || _j === void 0 ? void 0 : _j.call(options, code, errorObj, true, retryAttempt);
                                      startSocket();
                                  }
-                                 else {
-@@ -377,8 +382,8 @@ class Whatsapp {
-                                         this.sessions.get(sessionId).status = "disconnected";
-                                     this.retryCount.delete(sessionId);
-                                     this.deleteSession(sessionId);
--                                    (_h = this.callback.get(Defaults_1.CALLBACK_KEY.ON_DISCONNECTED)) === null || _h === void 0 ? void 0 : _h(sessionId);
--                                    (_j = options.onDisconnected) === null || _j === void 0 ? void 0 : _j.call(options);
-+                                    (_h = this.callback.get(Defaults_1.CALLBACK_KEY.ON_DISCONNECTED)) === null || _h === void 0 ? void 0 : _h(sessionId, code, errorObj, false, retryAttempt);
-+                                    (_j = options.onDisconnected) === null || _j === void 0 ? void 0 : _j.call(options, code, errorObj, false, retryAttempt);
-                                 }
-                             }
-                             if (connection == "open") {
-@@ -444,7 +449,7 @@ class Whatsapp {
+@@ -444,11 +449,13 @@ class Whatsapp {
                  let isPairingCodeRequested = false;
                  const store = yield this.getStore(sessionId);
                  const sock = (0, baileys_1.default)({
@@ -88,7 +46,14 @@ index f857a06..c8c3b16 100644
                      auth: store.state,
                      logger: this.P,
                      markOnlineOnConnect: false,
-@@ -492,7 +497,9 @@ class Whatsapp {
+-                    browser: baileys_1.Browsers.ubuntu("Chrome"),
++                    syncFullHistory: false,
++                    generateHighQualityLinkPreview: false,
++                    browser: baileys_1.Browsers.macOS("Desktop"),
+                 });
+                 this.sessions.set(sessionId, {
+                     sock: sock,
+@@ -492,7 +499,9 @@ class Whatsapp {
                                      this.sessions.get(sessionId).status = "connecting";
                              }
                              if (connection === "close") {
@@ -99,25 +64,3 @@ index f857a06..c8c3b16 100644
                                  let retryAttempt = (_h = this.retryCount.get(sessionId)) !== null && _h !== void 0 ? _h : 0;
                                  let shouldRetry = false;
                                  if (code != baileys_1.DisconnectReason.loggedOut && retryAttempt < 10) {
-@@ -500,7 +507,10 @@ class Whatsapp {
-                                 }
-                                 if (shouldRetry) {
-                                     retryAttempt++;
-+                                    console.log("[baileys-debug] Retrying connection...", retryAttempt);
-                                     this.retryCount.set(sessionId, retryAttempt);
-+                                    (_j = this.callback.get(Defaults_1.CALLBACK_KEY.ON_DISCONNECTED)) === null || _j === void 0 ? void 0 : _j(sessionId, code, errorObj, true, retryAttempt);
-+                                    (_k = options.onDisconnected) === null || _k === void 0 ? void 0 : _k.call(options, code, errorObj, true, retryAttempt);
-                                     startSocket();
-                                 }
-                                 else {
-@@ -509,8 +519,8 @@ class Whatsapp {
-                                         this.sessions.get(sessionId).status = "disconnected";
-                                     this.retryCount.delete(sessionId);
-                                     this.deleteSession(sessionId);
--                                    (_j = this.callback.get(Defaults_1.CALLBACK_KEY.ON_DISCONNECTED)) === null || _j === void 0 ? void 0 : _j(sessionId);
--                                    (_k = options.onDisconnected) === null || _k === void 0 ? void 0 : _k.call(options);
-+                                    (_j = this.callback.get(Defaults_1.CALLBACK_KEY.ON_DISCONNECTED)) === null || _j === void 0 ? void 0 : _j(sessionId, code, errorObj, false, retryAttempt);
-+                                    (_k = options.onDisconnected) === null || _k === void 0 ? void 0 : _k.call(options, code, errorObj, false, retryAttempt);
-                                 }
-                             }
-                             if (connection == "open") {

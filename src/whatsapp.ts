@@ -86,33 +86,20 @@ export const whatsapp = new Whatsapp({
       message: `Berhasil terhubung ke WhatsApp (Akun: ${accountInfo})`,
     });
   },
-  onDisconnected(sessionId, code, errorObj, shouldRetry, retryAttempt) {
-    const reason = systemLogStore.formatDisconnectReason(code, errorObj);
+  onDisconnected(sessionId) {
+    whatsappStatuses.set(sessionId, {
+      details: whatsappStatuses.get(sessionId)?.details,
+      status: "disconnected",
+    });
 
-    if (shouldRetry) {
-      systemLogStore.add({
-        level: "WARN",
-        event: "RECONNECTING",
-        session: sessionId,
-        message: `Koneksi terputus sementara (Percobaan koneksi ulang ke-${retryAttempt || 1}). ${reason.description}`,
-        details: { code, shouldRetry, retryAttempt, error: errorObj },
-      });
-    } else {
-      whatsappStatuses.set(sessionId, {
-        details: whatsappStatuses.get(sessionId)?.details,
-        status: "disconnected",
-      });
-
-      console.log(`[${sessionId}] disconnected`);
-      webhookSession({ session: sessionId, status: "disconnected" });
-      systemLogStore.add({
-        level: "ERROR",
-        event: "DISCONNECTED",
-        session: sessionId,
-        message: `Sesi WhatsApp terputus/nonaktif. ${reason.description}`,
-        details: { code, shouldRelogin: reason.shouldRelogin, error: errorObj },
-      });
-    }
+    console.log(`[${sessionId}] disconnected`);
+    webhookSession({ session: sessionId, status: "disconnected" });
+    systemLogStore.add({
+      level: "ERROR",
+      event: "DISCONNECTED",
+      session: sessionId,
+      message: `Sesi WhatsApp terputus atau offline. Disarankan cek koneksi atau scan ulang QR bila terlogout.`,
+    });
   },
 
   onMessageReceived: async (message) => {

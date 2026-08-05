@@ -130,8 +130,7 @@ export const createDashboardController = () => {
 
                 qrStoreTimeouts.set(uuid, timeout);
               },
-              onDisconnected(code, error, shouldRetry) {
-                if (shouldRetry) return;
+              onDisconnected() {
                 qrStore.delete(uuid);
                 if (qrStoreTimeouts.has(uuid)) {
                   clearTimeout(qrStoreTimeouts.get(uuid)!);
